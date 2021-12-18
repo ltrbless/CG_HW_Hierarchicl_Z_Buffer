@@ -32,7 +32,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${PROJECT_SOURCE_DIR}/lib")
 
 #*********************** 生成依赖库 *************************
 #添加所有源代码
-#添加依赖Imgui框架源代码  #添加 glad.c 代码
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/src sources) 
 
 add_library(${PROJECT_NAME}_lib STATIC ${sources})

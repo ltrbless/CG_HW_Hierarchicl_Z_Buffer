@@ -19,6 +19,9 @@ typedef Eigen::Vector2i Vec2i;
 
 #define max(a, b) (a > b ? a : b)
 #define min(a, b) (a < b ? a : b)
+#define min4(a, b, c, d) min(min(a, b), min(c, d))
+
+extern double initdeep;
 
 struct EdgeTable
 {
@@ -50,6 +53,23 @@ struct ActiveEdgeTable
     TriTable tri;  // 找到该边属于哪个面表
 };
 
+struct ftree
+{
+    ftree* t1;
+    ftree* t2;
+    ftree* t3;
+    ftree* t4;
+    double deep;
+
+    ftree()
+    {
+        t1 = nullptr;
+        t2 = nullptr;
+        t3 = nullptr;
+        t4 = nullptr;
+        deep = initdeep;        
+    }
+};
 
 
 
