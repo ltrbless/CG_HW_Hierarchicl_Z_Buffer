@@ -86,7 +86,6 @@ void MeshIO::SetLocation(int id, Vec3d loc)
     if(alltrimesh_[id].vecCoords.size() != 0)
     centerLoc /= (double)alltrimesh_[id].vecCoords.size();
     orient = loc - centerLoc;
-    std::cout << double(orient.x()) << '\n';
     for(int i = 0; i < alltrimesh_[id].vecCoords.size(); i++)
     {
         alltrimesh_[id].vecCoords[i] += orient;

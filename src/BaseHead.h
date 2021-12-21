@@ -22,6 +22,7 @@ typedef Eigen::Vector2i Vec2i;
 #define min4(a, b, c, d) min(min(a, b), min(c, d))
 
 extern double initdeep;
+extern int insertnode;
 
 struct EdgeTable
 {
@@ -68,6 +69,26 @@ struct ftree
         t3 = nullptr;
         t4 = nullptr;
         deep = initdeep;        
+    }
+};
+
+struct triNode
+{
+    Vec3d point[3];
+    Vector4unchar color;
+};
+
+struct octree
+{
+    octree* t[8];
+    std::vector<triNode> triVec;
+    
+    octree()
+    {
+        for(int i = 0; i < 8; i++)
+        {
+            t[i] = nullptr; 
+        }
     }
 };
 

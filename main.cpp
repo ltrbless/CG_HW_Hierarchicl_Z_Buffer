@@ -8,6 +8,7 @@
 #include "ZBuffer.h"
 #include "ScanLineZBuffer.h"
 #include "HierarchicalZBuffer.h"
+#include "OctreeHZBuffer.h"
 #include "Tool.h"
 #include "Eigen/Dense"
 
@@ -37,7 +38,8 @@ double initdeep = -1000000;
 
 int main()
 {
-	int display_w = 1280, display_h = 720;
+	// int display_w = 1280, display_h = 720;
+	int display_w = 512, display_h = 512;
 #ifdef _RENDER_
 	if (!glfwInit())  return 0;
 	GLFWwindow* window = glfwCreateWindow(display_w, display_h, "Z-Buffer", NULL, NULL);
@@ -50,22 +52,29 @@ int main()
 	MeshIO meshio;
 	int curmeshid;
 
-	curmeshid = meshio.ReadObjFile("../extern/file/bunny_40k.obj");
+	curmeshid = meshio.ReadObjFile("../extern/file/bunny.obj");
 	meshio.SetColorById(curmeshid, Vector4unchar(0.45 * 255, 0.55 * 255, 0.60 * 255, 255));
 	// meshio.SetColorById(curmeshid, Vector4unchar(255, 255, 255, 255));
 	meshio.Scale(curmeshid, 3);
 	meshio.SetLocation(curmeshid, Vec3d(0, 0, 0));
 
-	curmeshid = meshio.ReadObjFile("../extern/file/bunny_40k.obj");
-	meshio.SetColorById(curmeshid, Vector4unchar(0.8 * 255, 0.3 * 255, 0.60 * 255, 255));
-	// meshio.SetColorById(curmeshid, Vector4unchar(255, 255, 255, 255));
-	meshio.Scale(curmeshid, 2);
-	meshio.SetLocation(curmeshid, Vec3d(0, 0, -1));
-	// meshio.SetLocation(curmeshid, Vec3d(0.3, 0.3, 0.3));
+	// curmeshid = meshio.ReadObjFile("../extern/file/bunny_40k.obj");
+	// meshio.SetColorById(curmeshid, Vector4unchar(0.8 * 255, 0.3 * 255, 0.60 * 255, 255));
+	// // meshio.SetColorById(curmeshid, Vector4unchar(255, 255, 255, 255));
+	// meshio.Scale(curmeshid, 2);
+	// meshio.SetLocation(curmeshid, Vec3d(0, 0, -1));
+	// // meshio.SetLocation(curmeshid, Vec3d(0.3, 0.3, 0.3));
+
+	// curmeshid = meshio.ReadObjFile("../extern/file/bunny_40k.obj");
+	// meshio.SetColorById(curmeshid, Vector4unchar(0.8 * 255, 0.3 * 255, 0.60 * 255, 255));
+	// // meshio.SetColorById(curmeshid, Vector4unchar(255, 255, 255, 255));
+	// meshio.Scale(curmeshid, 2);
+	// meshio.SetLocation(curmeshid, Vec3d(0, 0, -2));
 
 	// Render* render = new ZBufferRender(display_w, display_h, backgroundcolor);
 	// Render* render = new ScanlineZBuffer(display_w, display_h, backgroundcolor);
-	Render* render = new HZBuffer(display_w, display_h, backgroundcolor);
+	// Render* render = new HZBuffer(display_w, display_h, backgroundcolor);
+	Render* render = new OctHZBuffer(display_w, display_h, backgroundcolor, 3);
 	render->RenderAllObj(Vec3d(-1.0, -1.0, -1.0), meshio.alltrimesh_);
 
 #ifdef _RENDER_

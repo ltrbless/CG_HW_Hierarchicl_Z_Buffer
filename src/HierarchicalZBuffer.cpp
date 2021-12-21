@@ -235,7 +235,7 @@ inline bool HZBuffer::JudgeTriInRec(Vec2i ld, Vec2i ru, Vec2i* coord)
 
 bool HZBuffer::JudgeRender(ftree* tree, Vec2i ld, Vec2i ru, Vec2i* coord, double deep)
 {
-    if( tree->deep > deep ) 
+    if( tree->deep >= deep ) 
     {
         return 0;  // 如果被完全遮挡则不用绘制
     }
@@ -255,20 +255,24 @@ bool HZBuffer::JudgeRender(ftree* tree, Vec2i ld, Vec2i ru, Vec2i* coord, double
     Vec2i ld_4 = Vec2i( ldru2x + 1,   ld.y()    );
     Vec2i ru_4 = Vec2i( ru.x(),       ldru2y    ); 
 
+
     int j1 = JudgeTriInRec(ld_1, ru_1, coord);
+    if(j1){
+        return JudgeRender(tree->t1, ld_1, ru_1, coord, deep);
+    } 
     int j2 = JudgeTriInRec(ld_2, ru_2, coord);
+    if(j2){
+        return JudgeRender(tree->t2, ld_2, ru_2, coord, deep);
+    }
     int j3 = JudgeTriInRec(ld_3, ru_3, coord);
+    if(j3){
+        return JudgeRender(tree->t3, ld_3, ru_3, coord, deep);
+    }
     int j4 = JudgeTriInRec(ld_4, ru_4, coord);
-
-    if(!j1 && !j2 && !j3 && !j4) return 1; // 当不存在包含该三角形的层次时，返回
-
-    int ans = 1;  // 默认不会被遮挡，即需要绘制
-    if(j1) ans &= JudgeRender(tree->t1, ld_1, ru_1, coord, deep);
-    if(j2) ans &= JudgeRender(tree->t2, ld_2, ru_2, coord, deep);
-    if(j3) ans &= JudgeRender(tree->t3, ld_3, ru_3, coord, deep);
-    if(j4) ans &= JudgeRender(tree->t4, ld_4, ru_4, coord, deep);
-
-    return ans;
+    if(j4){
+        return JudgeRender(tree->t4, ld_4, ru_4, coord, deep);
+    }
+    return 1; // 当不存在包含该三角形的层次时，返回
 }
 
 int HZBuffer::RenderAllObj(Vec3d view, std::vector<TriMesh>& alltrimesh)
@@ -308,7 +312,6 @@ int HZBuffer::RenderAllObj(Vec3d view, std::vector<TriMesh>& alltrimesh)
             Vec2i ldt, rut;
             bool b_render = JudgeRender(deepbuffertree_, Vec2i(0, 0), Vec2i(width_ - 1, height_ - 1), screenCoord, deep_max);
 
-            // std::cout << b_render << '\n';
             if(b_render) 
             {
                 RenderTriangle(screenCoord, deep, tmp);
@@ -318,7 +321,7 @@ int HZBuffer::RenderAllObj(Vec3d view, std::vector<TriMesh>& alltrimesh)
             }
         }
     }
-    std::cout << "all avoid render triangle is " << saverender << '\n';
+    std::cout << "All avoid render triangle is " << saverender << '\n';
     return 1;
 }
 
@@ -400,6 +403,7 @@ bool HZBuffer::RenderTriangle(Vec2i* coord, Vec3d& deep, Vector4unchar& color)
             {
                 deepbuffer_[x + width_ * y] = curdeep;
                 UpdateTreeNode(this->deepbuffertree_, Vec2i(0,0), Vec2i(width_ - 1, height_ - 1), Vec2i(x, y));
+                // abort();
                 framebuffer_[ (x + width_ * y) * 3 + 0] = color.x(); 
                 framebuffer_[ (x + width_ * y) * 3 + 1] = color.y(); 
                 framebuffer_[ (x + width_ * y) * 3 + 2] = color.z(); 
@@ -437,6 +441,7 @@ bool HZBuffer::RenderTriangle(Vec2i* coord, Vec3d& deep, Vector4unchar& color)
             if(y * width_ + x < width_ * height_ && deepbuffer_[ y * width_ + x ] < curdeep ) // 对比深度缓存以更新帧缓存
             {
                 deepbuffer_[x + width_ * y] = curdeep;
+                UpdateTreeNode(this->deepbuffertree_, Vec2i(0,0), Vec2i(width_ - 1, height_ - 1), Vec2i(x, y));
                 framebuffer_[ (x + width_ * y) * 3 + 0] = color.x(); 
                 framebuffer_[ (x + width_ * y) * 3 + 1] = color.y(); 
                 framebuffer_[ (x + width_ * y) * 3 + 2] = color.z(); 

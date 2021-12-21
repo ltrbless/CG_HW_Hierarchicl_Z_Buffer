@@ -17,7 +17,7 @@ public:
 
 
     bool RenderTriangle(Vec2i* twodimcoord, Vec3d& deep, Vector4unchar& color);
-    bool JudgeTriInRec(Vec2i ld, Vec2i ru, Vec2i* coord);
+    bool JudgeTriInRec(Vec2i ld, Vec2i ru, Vec2i* coord);  // left down  /  right up
     void DeleteTree(ftree* curtree);
     bool JudgeRender(ftree* tree, Vec2i ld, Vec2i ru, Vec2i* coord, double deep);
     void BuildTree(ftree* curtree, Vec2i ld, Vec2i ru);
