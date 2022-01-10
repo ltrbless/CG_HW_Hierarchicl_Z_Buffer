@@ -52,7 +52,7 @@ void HZBuffer::ClearDeepBuffer()
 }
 
 
-void HZBuffer::UpdateTreeNode(ftree* curtree, Vec2i ld, Vec2i ru, Vec2i& target)
+void HZBuffer::UpdateTreeNode(ftree* curtree, Vec2i& ld, Vec2i& ru, Vec2i& target)
 {
     if(ld.x() == ru.x() && ld.y() == ru.y())
     {
@@ -87,10 +87,13 @@ void HZBuffer::UpdateTreeNode(ftree* curtree, Vec2i ld, Vec2i ru, Vec2i& target)
     // std::cout << ld_4.x() << " " << ld_4.y() << " " << ru_4.x() << " " << ru_4.y() << std::endl;
     if(ld_1.x() <= target.x() && ld_1.y() <= target.y() && target.x() <= ru_1.x() && target.y() <= ru_1.y())
     UpdateTreeNode(curtree->t1, ld_1, ru_1, target);
+
     if(ld_2.x() <= target.x() && ld_2.y() <= target.y() && target.x() <= ru_2.x() && target.y() <= ru_2.y())
     UpdateTreeNode(curtree->t2, ld_2, ru_2, target);
+
     if(ld_3.x() <= target.x() && ld_3.y() <= target.y() && target.x() <= ru_3.x() && target.y() <= ru_3.y())
     UpdateTreeNode(curtree->t3, ld_3, ru_3, target);
+
     if(ld_4.x() <= target.x() && ld_4.y() <= target.y() && target.x() <= ru_4.x() && target.y() <= ru_4.y())
     UpdateTreeNode(curtree->t4, ld_4, ru_4, target);
 
@@ -99,7 +102,7 @@ void HZBuffer::UpdateTreeNode(ftree* curtree, Vec2i ld, Vec2i ru, Vec2i& target)
 
 
 
-void HZBuffer::UpdateTree(ftree* curtree, Vec2i ld, Vec2i ru)
+void HZBuffer::UpdateTree(ftree* curtree, Vec2i& ld, Vec2i& ru)
 {
     if(ld.x() == ru.x() && ld.y() == ru.y())
     {
@@ -144,7 +147,7 @@ void HZBuffer::UpdateTree(ftree* curtree, Vec2i ld, Vec2i ru)
     curtree->deep = min4(curtree->t1->deep, curtree->t2->deep, curtree->t3->deep,curtree->t4->deep);    
 }
 
-void HZBuffer::BuildTree(ftree* curtree, Vec2i ld, Vec2i ru)
+void HZBuffer::BuildTree(ftree* curtree, Vec2i& ld, Vec2i& ru)
 {
     // std::cout << "**********************\n";
     // std::cout << ld.x() << " " << ld.y() << " " << ru.x() << " " << ru.y() << std::endl;
@@ -155,6 +158,7 @@ void HZBuffer::BuildTree(ftree* curtree, Vec2i ld, Vec2i ru)
     }
     if(ld.x() > ru.x() || ld.y() > ru.y())
     {
+        std::cout << "Error Here\n";
         curtree->deep = -initdeep; // 应设置为最大值，为了避免产生印象
         return ;
     }
@@ -174,7 +178,10 @@ void HZBuffer::BuildTree(ftree* curtree, Vec2i ld, Vec2i ru)
     Vec2i ld_4 = Vec2i( ldru2x + 1,   ld.y()    );
     Vec2i ru_4 = Vec2i( ru.x(),       ldru2y    ); 
 
-
+    // std::cout << ld_1.x() << " " << ld_1.y() << " " << ru_1.x() << " " << ru_1.y() << std::endl;
+    // std::cout << ld_2.x() << " " << ld_2.y() << " " << ru_2.x() << " " << ru_2.y() << std::endl;
+    // std::cout << ld_3.x() << " " << ld_3.y() << " " << ru_3.x() << " " << ru_3.y() << std::endl;
+    // std::cout << ld_4.x() << " " << ld_4.y() << " " << ru_4.x() << " " << ru_4.y() << std::endl;
 
     // abort();
 
@@ -217,7 +224,7 @@ void HZBuffer::BuildTree(ftree* curtree, Vec2i ld, Vec2i ru)
 //     return ;
 // }
 
-inline bool HZBuffer::JudgeTriInRec(Vec2i ld, Vec2i ru, Vec2i* coord)
+inline bool HZBuffer::JudgeTriInRec(Vec2i& ld, Vec2i& ru, Vec2i* coord)
 {
     bool f = 1;
     for(int i = 0; i < 3; i++)
@@ -233,7 +240,7 @@ inline bool HZBuffer::JudgeTriInRec(Vec2i ld, Vec2i ru, Vec2i* coord)
     return f;
 }
 
-bool HZBuffer::JudgeRender(ftree* tree, Vec2i ld, Vec2i ru, Vec2i* coord, double deep)
+bool HZBuffer::JudgeRender(ftree* tree, Vec2i& ld, Vec2i& ru, Vec2i* coord, double deep)
 {
     if( tree->deep >= deep ) 
     {
@@ -255,6 +262,12 @@ bool HZBuffer::JudgeRender(ftree* tree, Vec2i ld, Vec2i ru, Vec2i* coord, double
     Vec2i ld_4 = Vec2i( ldru2x + 1,   ld.y()    );
     Vec2i ru_4 = Vec2i( ru.x(),       ldru2y    ); 
 
+    // std::cout << "This layer is " << deep << " th\n";
+    // std::cout << ld.x() << " " << ld.y() << " * " << ru.x() << " " << ru.y() << '\n';
+    // std::cout << ld_1.x() << " " << ld_1.y() << " * " << ru_1.x() << " " << ru_1.y() << '\n';
+    // std::cout << ld_2.x() << " " << ld_2.y() << " * " << ru_2.x() << " " << ru_2.y() << '\n';
+    // std::cout << ld_3.x() << " " << ld_3.y() << " * " << ru_3.x() << " " << ru_3.y() << '\n';
+    // std::cout << ld_4.x() << " " << ld_4.y() << " * " << ru_4.x() << " " << ru_4.y() << '\n';
 
     int j1 = JudgeTriInRec(ld_1, ru_1, coord);
     if(j1){

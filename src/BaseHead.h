@@ -7,6 +7,7 @@
 #include<math.h>
 #include<cmath>
 #include<vector>
+#include<ctime>
 #include<list>
 #include "Eigen/Dense"
 
@@ -23,6 +24,8 @@ typedef Eigen::Vector2i Vec2i;
 
 extern double initdeep;
 extern int insertnode;
+extern clock_t startTime;
+extern clock_t endTime;
 
 struct EdgeTable
 {

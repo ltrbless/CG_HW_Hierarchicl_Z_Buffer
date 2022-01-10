@@ -11,10 +11,14 @@
 #include "OctreeHZBuffer.h"
 #include "Tool.h"
 #include "Eigen/Dense"
-
+#include "Debug.h"
+#include <sstream>
+#include <cstring>
+#include <fstream>
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl2.h"
+#include<ctime>
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1900) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
 #pragma comment(lib, "legacy_stdio_definitions")
@@ -35,11 +39,13 @@ void Imgui_Help();
 #define _RENDER_
 
 double initdeep = -1000000;
+clock_t startTime = clock();
+clock_t endTime = clock();
 
-int main()
+int main(int argc, char** argv)
 {
-	// int display_w = 1280, display_h = 720;
-	int display_w = 512, display_h = 512;
+	int display_w = 1280, display_h = 720;
+	// int display_w = 512, display_h = 512;
 #ifdef _RENDER_
 	if (!glfwInit())  return 0;
 	GLFWwindow* window = glfwCreateWindow(display_w, display_h, "Z-Buffer", NULL, NULL);
@@ -51,19 +57,46 @@ int main()
 
 	MeshIO meshio;
 	int curmeshid;
+	srand(1);
+	std::string path = "../extern/file/bunny_1k.obj";
+	if(argc > 1)
+	{
+		path = argv[1];
+	}
+	else
+	{
+		std::cout << "The fault path is be used because not design file path." << "\n";
+	}
 
-	curmeshid = meshio.ReadObjFile("../extern/file/bunny.obj");
-	meshio.SetColorById(curmeshid, Vector4unchar(0.45 * 255, 0.55 * 255, 0.60 * 255, 255));
-	// meshio.SetColorById(curmeshid, Vector4unchar(255, 255, 255, 255));
-	meshio.Scale(curmeshid, 3);
-	meshio.SetLocation(curmeshid, Vec3d(0, 0, 0));
+	// double sx = -0.4;
+	// double sy = -0.4;
+	// double sz = 0.5;
+	// double dx = 0.01;
+	// double dy = 0.01;
+	// double dz = -2;
+	// for(int i = 0; i < 30; i++)
+	// {
+	// 	double random[3];
+	// 	for(int j = 0; j < 3; j++)
+	// 	{
+	// 		random[j] = rand() % 1000 / 1000.0;
+	// 	}
+	// 	curmeshid = meshio.ReadObjFile(path);
+	// 	meshio.SetColorById(curmeshid, Vector4unchar(random[0] * 255, random[1] * 255, random[2] * 255, 255));
+	// 	meshio.Scale(curmeshid, 4);
+	// 	double rd = rand() % 1000 / 1000.0 - 0.5;
+	// 	meshio.SetLocation(curmeshid, Vec3d(sx, sy, sz));
+	// 	sx += dx;
+	// 	sy += dy;
+	// 	sz += dz;
+	// }
 
-	// curmeshid = meshio.ReadObjFile("../extern/file/bunny_40k.obj");
-	// meshio.SetColorById(curmeshid, Vector4unchar(0.8 * 255, 0.3 * 255, 0.60 * 255, 255));
-	// // meshio.SetColorById(curmeshid, Vector4unchar(255, 255, 255, 255));
-	// meshio.Scale(curmeshid, 2);
-	// meshio.SetLocation(curmeshid, Vec3d(0, 0, -1));
-	// // meshio.SetLocation(curmeshid, Vec3d(0.3, 0.3, 0.3));
+
+	// curmeshid = meshio.ReadObjFile("../extern/file/test.obj");
+	// meshio.Scale(curmeshid, 0.3);
+	// meshio.SetLocation(curmeshid, Vec3d(-0.5, 0.5, -1));
+
+	// INFO_log("path is %s\n", path.c_str());
 
 	// curmeshid = meshio.ReadObjFile("../extern/file/bunny_40k.obj");
 	// meshio.SetColorById(curmeshid, Vector4unchar(0.8 * 255, 0.3 * 255, 0.60 * 255, 255));
@@ -72,23 +105,136 @@ int main()
 	// meshio.SetLocation(curmeshid, Vec3d(0, 0, -2));
 
 	// Render* render = new ZBufferRender(display_w, display_h, backgroundcolor);
-	// Render* render = new ScanlineZBuffer(display_w, display_h, backgroundcolor);
-	// Render* render = new HZBuffer(display_w, display_h, backgroundcolor);
-	Render* render = new OctHZBuffer(display_w, display_h, backgroundcolor, 3);
-	render->RenderAllObj(Vec3d(-1.0, -1.0, -1.0), meshio.alltrimesh_);
+	// Render* renderZ = new ZBufferRender(display_w, display_h, backgroundcolor);
+	// Render* renderS = new ScanlineZBuffer(display_w, display_h, backgroundcolor);
+	// Render* renderHZ = new HZBuffer(display_w, display_h, backgroundcolor);
+	// // Render* render = new OctHZBuffer(display_w, display_h, backgroundcolor, 5);
+	// clock_t endTime;
+    // startTime = clock();
+	// render->RenderAllObj(Vec3d(0, 0, 1), meshio.alltrimesh_);
+	// endTime = clock();
+    // std::cout << "ZBUFFER The model is : " << path << " the run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
+
+	// endTime;
+    // startTime = clock();
+	// renderS->RenderAllObj(Vec3d(0, 0, 1), meshio.alltrimesh_);
+	// endTime = clock();
+    // std::cout << "SZBUFFER The model is : " << path << " the run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
+
+	// endTime;
+    // startTime = clock();
+	// renderHZ->RenderAllObj(Vec3d(0, 0, 1), meshio.alltrimesh_);
+	// endTime = clock();
+    // std::cout << "HZBUFFER The model is : " << path << " the run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
 
 #ifdef _RENDER_
+	static int render_way = 0;
+	Render* render;
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
 		// User interface
+		
+		Imgui_Init();
+		ImGui::Begin("Z-buffer Setting");     
+		ImGui::ShowDemoWindow();                   
+		Imgui_Help();
+
+		
+		if(ImGui::CollapsingHeader("Setting"))
 		{
-			Imgui_Init();
-			ImGui::Begin("Z-buffer Setting");                        
-			Imgui_Help();
-			ImGui::End();
-			ImGui::Render();
+			char* str0;
+            ImGui::InputText("input text", str0, 10000);
+			// INFO_log("%s\n", str0);
 		}
+
+		if(ImGui::CollapsingHeader("Operation"))
+		{
+			ImGui::Text("Choose render way.");
+			ImGui::Separator();
+			int pre = render_way;
+			ImGui::RadioButton("Z-Buffer", &render_way, 0); 
+			ImGui::Separator();
+			ImGui::RadioButton("Scanline Z-Buffer", &render_way, 1); 
+			ImGui::Separator();
+			ImGui::RadioButton("Hierarchical Z-Buffer", &render_way, 2);
+			ImGui::Separator();
+			ImGui::RadioButton("Octree Hierarchical Z-Buffer", &render_way, 3);
+			ImGui::Separator();
+
+			if(pre != render_way)
+			{
+				if(render_way == 0)
+				{
+					INFO_log("Curent render way is Z-Buffer");
+					render = new ZBufferRender(display_w, display_h, backgroundcolor);
+					
+					// startTime = clock();
+					// render->RenderAllObj(Vec3d(0, 0, 1), meshio.alltrimesh_);
+					// endTime = clock();
+					// std::cout << "HZBUFFER The model is : " << path << " the run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
+				}
+				if(render_way == 1)
+				{
+					INFO_log("Curent render way is Scanline Z-Buffer");
+					render = new ScanlineZBuffer(display_w, display_h, backgroundcolor);
+				}
+				if(render_way == 2)
+				{
+
+					INFO_log("Curent render way is Hierarchical Z-Buffer");
+					render = new HZBuffer(display_w, display_h, backgroundcolor);
+				}
+				if(render_way == 3)
+				{
+					INFO_log("Curent render way is Octree Hierarchical Z-Buffer");
+					render = new OctHZBuffer(display_w, display_h, backgroundcolor, 3);
+				}
+			}
+
+			if (ImGui::Button("mvfs"))
+			{
+
+			}
+			ImGui::Separator();
+	
+		}
+
+		if (ImGui::CollapsingHeader("Log"))
+		{
+			static int test_type = 0;
+			static ImGuiTextBuffer log;
+			static int lines = 0;
+			if (ImGui::Button("Clear log")) {
+				errno_t err;
+				FILE *fp = nullptr;
+				err = fopen_s(&fp, "Info.log", "w");
+				fclose(fp);
+				log.clear();
+				lines = 0;
+			}
+
+			ImGui::Separator();
+			std::ifstream info("Info.log");
+			std::string data = "";
+			for(int i = 0; std::getline(info, data); i++)
+			{
+				log.appendf("%s\n",data.c_str());
+				data.clear();
+			}
+			info.close();
+
+
+			ImGui::BeginChild("Log");
+			ImGui::TextUnformatted(log.begin(), log.end());
+			log.clear();
+			ImGui::EndChild();
+		}
+
+		ImGui::End();
+		
+
+		/////////////////////////////////////////////////////////////////////
 		glfwGetFramebufferSize(window, &display_w, &display_h);
 		glViewport(0, 0, display_w, display_h);
 		glClearColor(backgroundcolor(0), backgroundcolor(1), backgroundcolor(2), backgroundcolor(3));
@@ -97,10 +243,11 @@ int main()
 
 		// frameBuffer = new unsigned char [display_h * display_w * 3]; // 定义帧缓冲区
 
-		glDrawPixels(display_w, display_h, GL_RGB, GL_UNSIGNED_BYTE, render->framebuffer_);
+		// glDrawPixels(display_w, display_h, GL_RGB, GL_UNSIGNED_BYTE, render->framebuffer_);
 
 		// delete frameBuffer;
 
+		ImGui::Render();
 		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData()); //必须在绘制完Open之后接着绘制Imgui
 		glfwMakeContextCurrent(window);
 		glfwSwapBuffers(window);
@@ -158,6 +305,8 @@ void Imgui_Help()
         ImGui::Separator();
         //ImGui::ShowUserGuide("");
     }
+
+	
 }
 
 void UI_Clear(GLFWwindow* window)

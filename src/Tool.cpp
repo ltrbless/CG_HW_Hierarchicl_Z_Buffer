@@ -12,6 +12,7 @@ Mat3 getlookatmatrix( Vec3d & eye,  Vec3d& center,  Vec3d& up)
 
     Mat3 mat;
 
+
     mat(0, 0) = s.x();
     mat(1, 0) = s.y();
     mat(2, 0) = s.z();
@@ -21,8 +22,26 @@ Mat3 getlookatmatrix( Vec3d & eye,  Vec3d& center,  Vec3d& up)
     mat(0, 2) = f.x();
     mat(1, 2) = f.y();
     mat(2, 2) = f.z();
-    
+
     return mat;
+
+    // Vec3d z = (eye - center);
+    // z.normalize();
+    // Vec3d x = (up.cross(z) );
+    // x.normalize();
+    // Vec3d y = (z.cross(x));
+    // y.normalize();
+    // Mat3 Minv = Mat3::Identity();
+    // Mat3 Tr   = Mat3::Identity();
+    // for (int i=0; i<3; i++) {
+    //     Minv(0, i) = x(i, 0);
+    //     Minv(1, i) = y(i, 0);
+    //     Minv(2, i) = z(i, 0);
+    //     // Tr(i, 3) = -center(i);
+    // }
+    // Mat3 ModelView = Minv;
+    
+    // return ModelView;
 }
 
 void lookatafter(std::vector<TriMesh>& alltrimesh, Mat3& view)

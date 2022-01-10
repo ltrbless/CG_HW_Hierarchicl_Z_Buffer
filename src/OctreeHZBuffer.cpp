@@ -60,7 +60,7 @@ void OctHZBuffer::ClearDeepBuffer()
 }
 
 
-void OctHZBuffer::UpdateQuadTreeNode(ftree* curtree, Vec2i ld, Vec2i ru, Vec2i& target)
+void OctHZBuffer::UpdateQuadTreeNode(ftree* curtree, Vec2i& ld, Vec2i& ru, Vec2i& target)
 {
     if(ld.x() == ru.x() && ld.y() == ru.y())
     {
@@ -107,7 +107,7 @@ void OctHZBuffer::UpdateQuadTreeNode(ftree* curtree, Vec2i ld, Vec2i ru, Vec2i& 
 
 
 
-void OctHZBuffer::UpdateQuadTree(ftree* curtree, Vec2i ld, Vec2i ru)
+void OctHZBuffer::UpdateQuadTree(ftree* curtree, Vec2i& ld, Vec2i& ru)
 {
     if(ld.x() == ru.x() && ld.y() == ru.y())
     {
@@ -146,7 +146,7 @@ void OctHZBuffer::UpdateQuadTree(ftree* curtree, Vec2i ld, Vec2i ru)
     curtree->deep = min4(curtree->t1->deep, curtree->t2->deep, curtree->t3->deep,curtree->t4->deep);    
 }
 
-void OctHZBuffer::BuildQuadTree(ftree* curtree, Vec2i ld, Vec2i ru)
+void OctHZBuffer::BuildQuadTree(ftree* curtree, Vec2i& ld, Vec2i& ru)
 {
     // std::cout << "**********************\n";
     // std::cout << ld.x() << " " << ld.y() << " " << ru.x() << " " << ru.y() << std::endl;
@@ -157,6 +157,7 @@ void OctHZBuffer::BuildQuadTree(ftree* curtree, Vec2i ld, Vec2i ru)
     }
     if(ld.x() > ru.x() || ld.y() > ru.y())
     {
+        std::cout << "Error \n";
         curtree->deep = -initdeep; // 应设置为最大值，为了避免产生印象
         return ;
     }
@@ -195,7 +196,7 @@ void OctHZBuffer::BuildQuadTree(ftree* curtree, Vec2i ld, Vec2i ru)
 }
 
 
-inline bool OctHZBuffer::JudgeRecInRec(Vec2i ld, Vec2i ru, Vec2i* coord)
+inline bool OctHZBuffer::JudgeRecInRec(Vec2i& ld, Vec2i& ru, Vec2i* coord)
 {
     bool f = 1;
     for(int i = 0; i < 2; i++)
@@ -211,7 +212,7 @@ inline bool OctHZBuffer::JudgeRecInRec(Vec2i ld, Vec2i ru, Vec2i* coord)
     return f;
 }
 
-bool OctHZBuffer::JudgeRender(ftree* tree, Vec2i ld, Vec2i ru, Vec2i* coord, double deep)
+bool OctHZBuffer::JudgeRender(ftree* tree, Vec2i& ld, Vec2i& ru, Vec2i* coord, double deep)
 {
     if( tree->deep >= deep ) 
     {
@@ -257,11 +258,33 @@ int OctHZBuffer::RenderAllObj(Vec3d view, std::vector<TriMesh>& alltrimesh)
 {
     // Mat3 view = getlookatmatrix(eye, Vec3d(0.0, 0.0, 0.0), Vec3d(0.0, 1.0, 0.0));
     // lookatafter(alltrimesh, view);
+    double Init = 10000;
+    Vec3d minnn = Vec3d(Init, Init, Init);
+    Vec3d maxxx = Vec3d(-Init, -Init, -Init);
+    for(int i = 0; i < alltrimesh.size(); i++)
+    {
+        for(int j = 0; j < alltrimesh[i].vecCoords.size(); j++)
+        {
+            minnn.x() = min(minnn.x(), alltrimesh[i].vecCoords[j].x());
+            minnn.y() = min(minnn.y(), alltrimesh[i].vecCoords[j].y());
+            minnn.z() = min(minnn.z(), alltrimesh[i].vecCoords[j].z());
 
-    BuildOctree(alltrimesh);
+            maxxx.x() = max(maxxx.x(), alltrimesh[i].vecCoords[j].x());
+            maxxx.y() = max(maxxx.y(), alltrimesh[i].vecCoords[j].y());
+            maxxx.z() = max(maxxx.z(), alltrimesh[i].vecCoords[j].z());
+        }
+    }
+    std::cout << "Octree box is" << minnn.x() << " " << minnn.y() << " " << minnn.z() << " | " << maxxx.x() << " " << maxxx.y() << " " << maxxx.z() << '\n';
+    BuildOctree(alltrimesh, minnn, maxxx);
+    clock_t endTime;
+    endTime = clock();
+    std::cout << "Build octree time is : "  << " the run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
     std::cout << "Build octree is success.\n";
     insertnode = 0;
-    OctreeRender(this->deepbufferoctree_, Vec3d(0, 0, 0), Vec3d(1.0, 1.0, 1.0), 1);
+    OctreeRender(this->deepbufferoctree_, minnn, maxxx, 1, 0);
+    // OctreeRender(this->deepbufferoctree_, Vec3d(0, 0, 0), Vec3d(1.0, 1.0, 1.0), 1);
+    endTime = clock();
+    std::cout << "Build octreeRender time is : "  << " the run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
     std::cout << "insert node is " << insertnode << '\n';
     std::cout << "Render is success.\n";
     return 1;
@@ -409,7 +432,7 @@ void OctHZBuffer::InitOctree(octree* curtree, int curdeep)
 	return;
 }
 
-void OctHZBuffer::BuildOctree(std::vector<TriMesh>& alltrimesh)
+void OctHZBuffer::BuildOctree(std::vector<TriMesh>& alltrimesh, Vec3d& minn, Vec3d& maxx)
 {
     //  构建八叉树
     int all_tri = 0;
@@ -431,14 +454,15 @@ void OctHZBuffer::BuildOctree(std::vector<TriMesh>& alltrimesh)
             Vector4unchar tmp( curmesh.color.x() * costh, curmesh.color.y() * costh, curmesh.color.z() * costh, 255 );
             curnode.color = tmp;
             all_tri ++;
-            InsertTriNode(this->deepbufferoctree_, Vec3d(0, 0, 0), Vec3d(1.0, 1.0, 1.0), curnode, 1);
+            // InsertTriNode(this->deepbufferoctree_, Vec3d(0, 0, 0), Vec3d(1.0, 1.0, 1.0), curnode, 1);
+            InsertTriNode(this->deepbufferoctree_, minn, maxx, curnode, 1);
         }
     }
     std::cout << "all insert node is " << insertnode << '\n';
     std::cout << "all tri mesh is " << all_tri << '\n';
 }
 
-bool OctHZBuffer::JudgeTriNodeInBox(triNode& trinode, Vec3d minn, Vec3d maxx)
+bool OctHZBuffer::JudgeTriNodeInBox(triNode& trinode, Vec3d& minn, Vec3d& maxx)
 {
 
     int f = 1;
@@ -463,7 +487,7 @@ bool OctHZBuffer::JudgeTriNodeInBox(triNode& trinode, Vec3d minn, Vec3d maxx)
     return f;
 }
 
-void OctHZBuffer::InsertTriNode(octree* curtree, Vec3d minn, Vec3d maxx, triNode& trinode, int curdeep)
+void OctHZBuffer::InsertTriNode(octree* curtree, Vec3d& minn, Vec3d& maxx, triNode& trinode, int curdeep)
 {
 
     if(curdeep == this->treedeep_)
@@ -627,7 +651,7 @@ void OctHZBuffer::InsertTriNode(octree* curtree, Vec3d minn, Vec3d maxx, triNode
     return ;
 }
 
-void OctHZBuffer::OctreeRender(octree* curtree, Vec3d minn, Vec3d maxx, int curdeep)
+void OctHZBuffer::OctreeRender(octree* curtree, Vec3d& minn, Vec3d& maxx, int curdeep, int id)
 {
     if(curdeep > this->treedeep_)
     {
@@ -736,32 +760,37 @@ void OctHZBuffer::OctreeRender(octree* curtree, Vec3d minn, Vec3d maxx, int curd
 // intersection ********************************************
 // 如果不完全属于任何一个子Box，则放到当前Box里面
 
-    OctreeRender(curtree->t[0], c0, f0, curdeep + 1);
-    OctreeRender(curtree->t[1], c1, f1, curdeep + 1);
-    OctreeRender(curtree->t[2], c2, f2, curdeep + 1);
-    OctreeRender(curtree->t[3], c3, f3, curdeep + 1);
-    OctreeRender(curtree->t[4], b4, c4, curdeep + 1);
-    OctreeRender(curtree->t[5], b5, c5, curdeep + 1);
-    OctreeRender(curtree->t[6], b6, c6, curdeep + 1);
-    OctreeRender(curtree->t[7], b7, c7, curdeep + 1);
+    OctreeRender(curtree->t[0], c0, f0, curdeep + 1, 1);
+    OctreeRender(curtree->t[1], c1, f1, curdeep + 1, 2);
+    OctreeRender(curtree->t[2], c2, f2, curdeep + 1, 3);
+    OctreeRender(curtree->t[3], c3, f3, curdeep + 1, 4);
+    OctreeRender(curtree->t[4], b4, c4, curdeep + 1, 5);
+    OctreeRender(curtree->t[5], b5, c5, curdeep + 1, 6);
+    OctreeRender(curtree->t[6], b6, c6, curdeep + 1, 7);
+    OctreeRender(curtree->t[7], b7, c7, curdeep + 1, 8);
+
+    if(curtree->triVec.size() == 0) return ;
 
     Vec2i coord[2];
     double deep;
 
-    coord[0].x() = minn.x() * this->width_;
-    coord[0].y() = minn.y() * this->height_;
+    coord[0].x() = (minn.x() + 1) / 2 * this->width_;
+    coord[0].y() = (minn.y() + 1) / 2 * this->height_;
 
-    coord[1].x() = maxx.x() * this->width_;
-    coord[1].y() = maxx.y() * this->height_;
+    coord[1].x() = (maxx.x() + 1) / 2 * this->width_;
+    coord[1].y() = (maxx.y() + 1) / 2 * this->height_;
 
     deep = max(minn.z(), maxx.z());
 
+    std::cout << "cur box id is " << id << " cur box tri num is " << curtree->triVec.size() << "  cur box coord is : " << minn.x() << " " << minn.y() << " " << minn.z() << " | " << maxx.x() << " " << maxx.y() << " " << maxx.z() << "\n";
+
+
     if(JudgeRender(deepbuffertree_, Vec2i(0, 0), Vec2i(width_ - 1, height_ - 1), coord, deep))
     {
-        // std::cout << "Render This Box " << coord[0].x() << " " << coord[0].y() << " " << coord[1].x() << " " << coord[1].y() << '\n';
+        std::cout << "Render This Box " << coord[0].x() << " " << coord[0].y() << " " << coord[1].x() << " " << coord[1].y() << " deep = " << deep << '\n';
         insertnode += curtree->triVec.size();
         if(curtree->triVec.size() != 0)
-        std::cout << "Cur Render tri number is " << curtree->triVec.size() << '\n';
+        // std::cout << "Cur Render tri number is " << curtree->triVec.size() << '\n';
         for(int i = 0; i < curtree->triVec.size(); i++)
         {
             Vec3d deep3d;
@@ -774,13 +803,14 @@ void OctHZBuffer::OctreeRender(octree* curtree, Vec3d minn, Vec3d maxx, int curd
                 deep3d[k] = curtree->triVec[i].point[k].z();
                 deep_max = max(deep_max, deep3d[k]);
             }
-            std::cout << screenCoord[0].x() << " " << screenCoord[0].y() << " " << screenCoord[1].x() << " " << screenCoord[1].y() << " " << screenCoord[2].x() << " " << screenCoord[2].y() << "\n" ;
+            // std::cout << screenCoord[0].x() << " " << screenCoord[0].y() << " " << screenCoord[1].x() << " " << screenCoord[1].y() << " " << screenCoord[2].x() << " " << screenCoord[2].y() << "\n" ;
             RenderTriangle(screenCoord, deep3d, curtree->triVec[i].color);
         }
         // std::cout << "Render OK\n";
     }
     else{
-        std::cout << "This Box is not render.\n";
+        if(curtree->triVec.size() > 0)
+            std::cout << "This Box is not render. Therefore free " << curtree->triVec.size() << '\n';
     }
     return ;
 }

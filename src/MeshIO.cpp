@@ -22,6 +22,7 @@ int MeshIO::ReadObjFile(std::string filename)
     std::ifstream file(filename);
     if(!file.is_open())
     {
+        std::cout << "This file is cannot open !\n";
         throw "This file is cannot open!";
     }
 
@@ -55,6 +56,8 @@ int MeshIO::ReadObjFile(std::string filename)
             continue;
         }
     }
+
+    
 
     this->alltrimesh_.push_back(trimesh);
 
