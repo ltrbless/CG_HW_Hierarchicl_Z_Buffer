@@ -155,7 +155,7 @@ int ScanlineZBuffer::RenderAllObj(Vec3d view, std::vector<TriMesh>& alltrimesh)
     std::list<ActiveEdgeTable> activeEdgeList;
     for(int line = 0; line < height_; line++)
     {
-        for(inr i = 0; i < triTableList_[line].size(); i++) // 遍历所有的活化面表
+        for(int i = 0; i < triTableList_[line].size(); i++) // 遍历所有的活化面表
         {
             TriTable curtri = triTableList_[line][i];
             ActiveEdgeTable curActiveEdgeTable;

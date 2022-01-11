@@ -35,7 +35,7 @@ int ZBufferRender::RenderAllObj(Vec3d eye, std::vector<TriMesh>& alltrimesh)
     // std::cout << " view matrix : " << '\n';
     // std::cout << view << "\n";
     // lookatafter(alltrimesh, view);
-	std::cout << "VecTopo number is " << alltrimesh[0].vecTopos.size();
+	// std::cout << "VecTopo number is " << alltrimesh[0].vecTopos.size();
     for(int i = 0; i < alltrimesh.size(); i++)  // 拿出来一个体
     {
         TriMesh curmesh = alltrimesh[i];

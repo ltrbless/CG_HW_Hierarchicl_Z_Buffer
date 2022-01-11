@@ -130,10 +130,13 @@ int main(int argc, char** argv)
 #ifdef _RENDER_
 	static int render_way = 0;
 	static ImVec4 Color = ImVec4(0,0,0,1);
-	Render* render;
+	Render* render = nullptr;
 	Vector4unchar objColor;
 	static char filepath[1000] = ""; 
+	double* scale = new double[1];
+	*scale = 1.0;
 	int pre = -1;
+	char* name[4] = {"Z_Buffer", "ScanLine_Z_Buffer", "Hierarchical_Z_Buffer", "Octree_Hierarchical_Z_Buffer"};
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -153,10 +156,13 @@ int main(int argc, char** argv)
 			ImGui::Separator();
 			ImGui::BulletText("Set Obj Color.");
 			ImGui::ColorEdit3("color", &Color.x); 
-			objColor.x() = Color.x;
-			objColor.y() = Color.y;
-			objColor.z() = Color.z;
-			objColor.w() = Color.w;
+			objColor.x() = Color.x * 255;
+			objColor.y() = Color.y * 255;
+			objColor.z() = Color.z * 255;
+			objColor.w() = Color.w * 255;
+
+			ImGui::InputDouble("Double", scale);
+
 
 			ImGui::Separator();
 			ImGui::Text("Choose render way.");
@@ -176,6 +182,7 @@ int main(int argc, char** argv)
 				{
 					pre = render_way;
 					INFO_log("Curent render way is Z-Buffer");
+					if(render != nullptr) delete render;
 					render = new ZBufferRender(display_w, display_h, backgroundcolor);
 					// startTime = clock();
 					// render->RenderAllObj(Vec3d(0, 0, 1), meshio.alltrimesh_);
@@ -186,35 +193,46 @@ int main(int argc, char** argv)
 				{
 					pre = render_way;
 					INFO_log("Curent render way is Scanline Z-Buffer");
+					if(render != nullptr) delete render;
 					render = new ScanlineZBuffer(display_w, display_h, backgroundcolor);
 				}
 				if(render_way == 2)
 				{
 					pre = render_way;
 					INFO_log("Curent render way is Hierarchical Z-Buffer");
+					if(render != nullptr) delete render;
 					render = new HZBuffer(display_w, display_h, backgroundcolor);
 				}
 				if(render_way == 3)
 				{
 					pre = render_way;
 					INFO_log("Curent render way is Octree Hierarchical Z-Buffer");
+					if(render != nullptr) delete render;
 					render = new OctHZBuffer(display_w, display_h, backgroundcolor, 3);
 				}
 			}
 
 			if (ImGui::Button("Render"))
 			{
+				{
+					meshio.id = -1;
+					meshio.alltrimesh_.clear();
+					render->ClearDeepBuffer();
+					render->ClearFrameBuffer();
+				}
 				curmeshid = meshio.ReadObjFile(filepath);
 				if(curmeshid != -1)
 				{
 					std::cout << curmeshid << " " << meshio.alltrimesh_.size() << " " << meshio.alltrimesh_[0].vecTopos.size() << "\n";
 					meshio.SetColorById(curmeshid, objColor);
 					meshio.SetLocation(curmeshid, Vec3d(0, 0, 0));
+					meshio.Scale(curmeshid, *scale);
 					// INFO_log("This obj finish read and have %d facets.", meshio.alltrimesh_[curmeshid - 1].vecTopos.size());
 					startTime = clock();
 					render->RenderAllObj(Vec3d(0, 0, 1), meshio.alltrimesh_);
 					endTime = clock();
-					std::cout << "HZBUFFER The model is : " << filepath << " the run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
+					// std::cout << "HZBUFFER The model is : " << filepath << " the run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
+					INFO_log("%s way render run time is : %.3f s.", name[render_way], (double)(endTime - startTime) / CLOCKS_PER_SEC);
 				} 
 			}
 
@@ -274,8 +292,7 @@ int main(int argc, char** argv)
 		// frameBuffer = new unsigned char [display_h * display_w * 3]; // 定义帧缓冲区
 
 		if(meshio.id > -1)
-		{
-			// std::cout << "Here\n";
+		{ 
 			glDrawPixels(display_w, display_h, GL_RGB, GL_UNSIGNED_BYTE, render->framebuffer_);
 		}
 
@@ -327,9 +344,8 @@ void Imgui_Help()
     if (ImGui::CollapsingHeader("Help"))
     {
         ImGui::Text("By Taoran Liu");
-        ImGui::BulletText("Time: 2020.10.13");
+        ImGui::BulletText("Time: 2022.01.01");
         ImGui::BulletText("Email: taoranliu@zju.edu.cn");
-        ImGui::BulletText("Phone: 19550210570");
         ImGui::Separator();
         //ImGui::ShowUserGuide("");
     }

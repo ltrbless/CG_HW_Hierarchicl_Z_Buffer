@@ -14,6 +14,7 @@ Render::~Render()
 
 void Render::ClearFrameBuffer()
 {
+    std::cout << "Clear\n";
     for(int i = 0; i < width_; i++)
     {
         for(int j = 0; j < height_; j++)
