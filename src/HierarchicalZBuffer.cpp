@@ -158,7 +158,7 @@ void HZBuffer::BuildTree(ftree* curtree, Vec2i& ld, Vec2i& ru)
     }
     if(ld.x() > ru.x() || ld.y() > ru.y())
     {
-        std::cout << "Error Here\n";
+        // std::cout << "Error HierarchicalZBuffer.cpp 161 line\n";
         curtree->deep = -initdeep; // 应设置为最大值，为了避免产生印象
         return ;
     }

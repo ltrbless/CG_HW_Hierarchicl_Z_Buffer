@@ -17,7 +17,7 @@ struct TriMesh
 class MeshIO
 {
 public:
-    static int id;
+    int id;
 
     std::vector<TriMesh> alltrimesh_;
 

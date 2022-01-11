@@ -57,16 +57,16 @@ int main(int argc, char** argv)
 
 	MeshIO meshio;
 	int curmeshid;
-	srand(1);
-	std::string path = "../extern/file/bunny_1k.obj";
-	if(argc > 1)
-	{
-		path = argv[1];
-	}
-	else
-	{
-		std::cout << "The fault path is be used because not design file path." << "\n";
-	}
+	// srand(1);
+	// std::string path = "../extern/file/bunny_1k.obj";
+	// if(argc > 1)
+	// {
+	// 	path = argv[1];
+	// }
+	// else
+	// {
+	// 	std::cout << "The fault path is be used because not design file path." << "\n";
+	// }
 
 	// double sx = -0.4;
 	// double sy = -0.4;
@@ -111,7 +111,7 @@ int main(int argc, char** argv)
 	// // Render* render = new OctHZBuffer(display_w, display_h, backgroundcolor, 5);
 	// clock_t endTime;
     // startTime = clock();
-	// render->RenderAllObj(Vec3d(0, 0, 1), meshio.alltrimesh_);
+	// renderZ->RenderAllObj(Vec3d(0, 0, 1), meshio.alltrimesh_);
 	// endTime = clock();
     // std::cout << "ZBUFFER The model is : " << path << " the run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
 
@@ -129,7 +129,12 @@ int main(int argc, char** argv)
 
 #ifdef _RENDER_
 	static int render_way = 0;
+	static ImVec4 Color = ImVec4(0,0,0,1);
 	Render* render;
+	Vector4unchar objColor;
+	static char filepath[1000] = ""; 
+	int pre = -1;
+
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
@@ -137,22 +142,25 @@ int main(int argc, char** argv)
 		
 		Imgui_Init();
 		ImGui::Begin("Z-buffer Setting");     
-		ImGui::ShowDemoWindow();                   
+		// ImGui::ShowDemoWindow();                   
 		Imgui_Help();
 
 		
 		if(ImGui::CollapsingHeader("Setting"))
 		{
-			char* str0;
-            ImGui::InputText("input text", str0, 10000);
-			// INFO_log("%s\n", str0);
-		}
+			ImGui::BulletText("Please input obj file path.");
+			ImGui::InputText("(.obj)", filepath, 1000);
+			ImGui::Separator();
+			ImGui::BulletText("Set Obj Color.");
+			ImGui::ColorEdit3("color", &Color.x); 
+			objColor.x() = Color.x;
+			objColor.y() = Color.y;
+			objColor.z() = Color.z;
+			objColor.w() = Color.w;
 
-		if(ImGui::CollapsingHeader("Operation"))
-		{
+			ImGui::Separator();
 			ImGui::Text("Choose render way.");
 			ImGui::Separator();
-			int pre = render_way;
 			ImGui::RadioButton("Z-Buffer", &render_way, 0); 
 			ImGui::Separator();
 			ImGui::RadioButton("Scanline Z-Buffer", &render_way, 1); 
@@ -166,9 +174,9 @@ int main(int argc, char** argv)
 			{
 				if(render_way == 0)
 				{
+					pre = render_way;
 					INFO_log("Curent render way is Z-Buffer");
 					render = new ZBufferRender(display_w, display_h, backgroundcolor);
-					
 					// startTime = clock();
 					// render->RenderAllObj(Vec3d(0, 0, 1), meshio.alltrimesh_);
 					// endTime = clock();
@@ -176,26 +184,48 @@ int main(int argc, char** argv)
 				}
 				if(render_way == 1)
 				{
+					pre = render_way;
 					INFO_log("Curent render way is Scanline Z-Buffer");
 					render = new ScanlineZBuffer(display_w, display_h, backgroundcolor);
 				}
 				if(render_way == 2)
 				{
-
+					pre = render_way;
 					INFO_log("Curent render way is Hierarchical Z-Buffer");
 					render = new HZBuffer(display_w, display_h, backgroundcolor);
 				}
 				if(render_way == 3)
 				{
+					pre = render_way;
 					INFO_log("Curent render way is Octree Hierarchical Z-Buffer");
 					render = new OctHZBuffer(display_w, display_h, backgroundcolor, 3);
 				}
 			}
 
-			if (ImGui::Button("mvfs"))
+			if (ImGui::Button("Render"))
 			{
-
+				curmeshid = meshio.ReadObjFile(filepath);
+				if(curmeshid != -1)
+				{
+					std::cout << curmeshid << " " << meshio.alltrimesh_.size() << " " << meshio.alltrimesh_[0].vecTopos.size() << "\n";
+					meshio.SetColorById(curmeshid, objColor);
+					meshio.SetLocation(curmeshid, Vec3d(0, 0, 0));
+					// INFO_log("This obj finish read and have %d facets.", meshio.alltrimesh_[curmeshid - 1].vecTopos.size());
+					startTime = clock();
+					render->RenderAllObj(Vec3d(0, 0, 1), meshio.alltrimesh_);
+					endTime = clock();
+					std::cout << "HZBUFFER The model is : " << filepath << " the run time is: " <<(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << std::endl;
+				} 
 			}
+
+			if (meshio.id > -1 && ImGui::Button("Clear"))
+			{
+				meshio.id = -1;
+				meshio.alltrimesh_.clear();
+				render->ClearDeepBuffer();
+				render->ClearFrameBuffer();
+			}
+			
 			ImGui::Separator();
 	
 		}
@@ -243,7 +273,11 @@ int main(int argc, char** argv)
 
 		// frameBuffer = new unsigned char [display_h * display_w * 3]; // 定义帧缓冲区
 
-		// glDrawPixels(display_w, display_h, GL_RGB, GL_UNSIGNED_BYTE, render->framebuffer_);
+		if(meshio.id > -1)
+		{
+			// std::cout << "Here\n";
+			glDrawPixels(display_w, display_h, GL_RGB, GL_UNSIGNED_BYTE, render->framebuffer_);
+		}
 
 		// delete frameBuffer;
 
@@ -296,12 +330,6 @@ void Imgui_Help()
         ImGui::BulletText("Time: 2020.10.13");
         ImGui::BulletText("Email: taoranliu@zju.edu.cn");
         ImGui::BulletText("Phone: 19550210570");
-        ImGui::Separator();
-
-        ImGui::Text("USER GUIDE:");
-        ImGui::BulletText("Press 'ESC' to close current window.");
-        ImGui::BulletText("When you right-click one you can drag the model and twice is quit.");
-        ImGui::BulletText("When you middle-click one you can scale the model and twice is quit.");
         ImGui::Separator();
         //ImGui::ShowUserGuide("");
     }

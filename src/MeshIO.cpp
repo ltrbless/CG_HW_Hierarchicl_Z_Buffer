@@ -1,14 +1,14 @@
 #include"MeshIO.h"
+#include"Debug.h"
 #include"Tool.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
 
-int MeshIO::id = 0;
-
 
 MeshIO::MeshIO()
 {
+    this->id = -1;
 
 }
 
@@ -23,11 +23,12 @@ int MeshIO::ReadObjFile(std::string filename)
     if(!file.is_open())
     {
         std::cout << "This file is cannot open !\n";
-        throw "This file is cannot open!";
+        INFO_log("This file is cannot open !\n");
+        return -1;
     }
 
     TriMesh trimesh;
-    trimesh.id = MeshIO::id++;
+    trimesh.id = ++this->id;
     
     std::string line;
     std::string word;
